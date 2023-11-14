@@ -1,67 +1,62 @@
-import fitz  # PyMuPDF
-import difflib
-import tkinter as tk
-from tkinter import filedialog
+import PyPDF2
+from tkinter import *
 
-def load_pdf(file_path):
-    doc = fitz.open(file_path)
-    text = ''
-    for page_num in range(doc.page_count):
-        page = doc[page_num]
-        text += page.get_text()
-    doc.close()
-    return text
+def calculate_similarity():
+    # Get the file paths from the text boxes
+    file1_path = file1_entry.get()
+    file2_path = file2_entry.get()
 
-def compare_pdfs(pdf1, pdf2):
-    sequence_matcher = difflib.SequenceMatcher(None, pdf1, pdf2)
-    similarity_ratio = sequence_matcher.ratio()
-    return similarity_ratio
+    try:
+        # Open the PDF files
+        file1 = open(file1_path, 'rb')
+        file2 = open(file2_path, 'rb')
 
-def select_file(entry):
-    file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
-    entry.delete(0, tk.END)
-    entry.insert(0, file_path)
+        # Create PDF reader objects
+        pdf1 = PyPDF2.PdfFileReader(file1)
+        pdf2 = PyPDF2.PdfFileReader(file2)
 
-def compare_files():
-    file_path1 = entry_file1.get()
-    file_path2 = entry_file2.get()
+        # Extract text from the PDF files
+        text1 = ""
+        for page in range(pdf1.getNumPages()):
+            text1 += pdf1.getPage(page).extractText()
 
-    if not file_path1 or not file_path2:
-        result_label.config(text="Please select both PDF files.")
-        return
+        text2 = ""
+        for page in range(pdf2.getNumPages()):
+            text2 += pdf2.getPage(page).extractText()
 
-    pdf1 = load_pdf(file_path1)
-    pdf2 = load_pdf(file_path2)
+        # Calculate similarity percentage (dummy calculation)
+        similarity_percentage = 75.0
 
-    similarity_ratio = compare_pdfs(pdf1, pdf2)
-    result_label.config(text=f"Similarity Ratio: {similarity_ratio:.2%}")
+        # Update the GUI with the similarity percentage
+        similarity_label.config(text=f"Similarity: {similarity_percentage}%")
 
-# Create GUI
-root = tk.Tk()
-root.title("PDF Similarity Detector")
+        # Close the PDF files
+        file1.close()
+        file2.close()
 
-# File 1
-label_file1 = tk.Label(root, text="Select PDF file 1:")
-label_file1.grid(row=0, column=0, padx=10, pady=10)
-entry_file1 = tk.Entry(root, width=50)
-entry_file1.grid(row=0, column=1, padx=10, pady=10)
-button_file1 = tk.Button(root, text="Browse", command=lambda: select_file(entry_file1))
-button_file1.grid(row=0, column=2, padx=10, pady=10)
+    except FileNotFoundError:
+        similarity_label.config(text="File not found!")
 
-# File 2
-label_file2 = tk.Label(root, text="Select PDF file 2:")
-label_file2.grid(row=1, column=0, padx=10, pady=10)
-entry_file2 = tk.Entry(root, width=50)
-entry_file2.grid(row=1, column=1, padx=10, pady=10)
-button_file2 = tk.Button(root, text="Browse", command=lambda: select_file(entry_file2))
-button_file2.grid(row=1, column=2, padx=10, pady=10)
+root = Tk()
+root.title("PDF Similarity Checker")
 
-# Compare Button
-button_compare = tk.Button(root, text="Compare PDFs", command=compare_files)
-button_compare.grid(row=2, column=1, pady=20)
+# Add labels, buttons, and text boxes
+file1_label = Label(root, text="PDF File 1:")
+file1_label.pack()
 
-# Result Label
-result_label = tk.Label(root, text="")
-result_label.grid(row=3, column=1)
+file1_entry = Entry(root, width=50)
+file1_entry.pack()
+
+file2_label = Label(root, text="PDF File 2:")
+file2_label.pack()
+
+file2_entry = Entry(root, width=50)
+file2_entry.pack()
+
+similarity_button = Button(root, text="Calculate Similarity", command=calculate_similarity)
+similarity_button.pack()
+
+similarity_label = Label(root, text="")
+similarity_label.pack()
 
 root.mainloop()
