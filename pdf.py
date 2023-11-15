@@ -31,10 +31,20 @@ def fayl_tanlash():
     # Ikkinchi PDF faylni tanlash
     file_path2 = filedialog.askopenfilename(title="Ikkinchi PDF faylni tanlang", filetypes=[("PDF fayllari", "*.pdf")])
 
-    # Foizni hisoblash va natijani chiqarish
+    # Foizni hisoblash va natijani korsatish
     if file_path1 and file_path2:
         foiz = hisobla_foiz(file_path1, file_path2)
-        print(f"Foiz: {foiz}%")
+
+        # Yangi oyna yaratish
+        result_window = tk.Tk()
+        result_window.title("Natija")
+
+        # Natijani korsatish
+        result_label = tk.Label(result_window, text=f"Foiz: {foiz}%", font=("Helvetica", 12))
+        result_label.pack(pady=20)
+
+        # Oynani ishga tushirish
+        result_window.mainloop()
 
 if __name__ == "__main__":
     fayl_tanlash()
