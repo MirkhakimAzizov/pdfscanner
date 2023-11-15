@@ -1,62 +1,40 @@
+import tkinter as tk
+from tkinter import filedialog
 import PyPDF2
-from tkinter import *
 
-def calculate_similarity():
-    # Get the file paths from the text boxes
-    file1_path = file1_entry.get()
-    file2_path = file2_entry.get()
+def hisobla_foiz(pdf1, pdf2):
+    # Birinchi PDF faylni ochamiz
+    with open(pdf1, 'rb') as file1:
+        pdf_reader1 = PyPDF2.PdfFileReader(file1)
+        page_count1 = pdf_reader1.numPages
 
-    try:
-        # Open the PDF files
-        file1 = open(file1_path, 'rb')
-        file2 = open(file2_path, 'rb')
+    # Ikkinchi PDF faylni ochamiz
+    with open(pdf2, 'rb') as file2:
+        pdf_reader2 = PyPDF2.PdfFileReader(file2)
+        page_count2 = pdf_reader2.numPages
 
-        # Create PDF reader objects
-        pdf1 = PyPDF2.PdfFileReader(file1)
-        pdf2 = PyPDF2.PdfFileReader(file2)
+    # Foizni hisoblaymiz
+    if page_count1 > 0 and page_count2 > 0:
+        foiz = (min(page_count1, page_count2) / max(page_count1, page_count2)) * 100
+        return foiz
+    else:
+        return 0
 
-        # Extract text from the PDF files
-        text1 = ""
-        for page in range(pdf1.getNumPages()):
-            text1 += pdf1.getPage(page).extractText()
+def fayl_tanlash():
+    # Fayl menejer oynasini ochamiz
+    root = tk.Tk()
+    root.withdraw()
 
-        text2 = ""
-        for page in range(pdf2.getNumPages()):
-            text2 += pdf2.getPage(page).extractText()
+    # Birinchi PDF faylni tanlash
+    file_path1 = filedialog.askopenfilename(title="Birinchi PDF faylni tanlang", filetypes=[("PDF fayllari", "*.pdf")])
 
-        # Calculate similarity percentage (dummy calculation)
-        similarity_percentage = 75.0
+    # Ikkinchi PDF faylni tanlash
+    file_path2 = filedialog.askopenfilename(title="Ikkinchi PDF faylni tanlang", filetypes=[("PDF fayllari", "*.pdf")])
 
-        # Update the GUI with the similarity percentage
-        similarity_label.config(text=f"Similarity: {similarity_percentage}%")
+    # Foizni hisoblash va natijani chiqarish
+    if file_path1 and file_path2:
+        foiz = hisobla_foiz(file_path1, file_path2)
+        print(f"Foiz: {foiz}%")
 
-        # Close the PDF files
-        file1.close()
-        file2.close()
-
-    except FileNotFoundError:
-        similarity_label.config(text="File not found!")
-
-root = Tk()
-root.title("PDF Similarity Checker")
-
-# Add labels, buttons, and text boxes
-file1_label = Label(root, text="PDF File 1:")
-file1_label.pack()
-
-file1_entry = Entry(root, width=50)
-file1_entry.pack()
-
-file2_label = Label(root, text="PDF File 2:")
-file2_label.pack()
-
-file2_entry = Entry(root, width=50)
-file2_entry.pack()
-
-similarity_button = Button(root, text="Calculate Similarity", command=calculate_similarity)
-similarity_button.pack()
-
-similarity_label = Label(root, text="")
-similarity_label.pack()
-
-root.mainloop()
+if __name__ == "__main__":
+    fayl_tanlash()
