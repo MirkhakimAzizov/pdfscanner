@@ -1,50 +1,75 @@
 import tkinter as tk
 from tkinter import filedialog
-import PyPDF2
+from PyPDF2 import PdfFileReader
+import re
 
-def hisobla_foiz(pdf1, pdf2):
-    # Birinchi PDF faylni ochamiz
-    with open(pdf1, 'rb') as file1:
-        pdf_reader1 = PyPDF2.PdfFileReader(file1)
-        page_count1 = pdf_reader1.numPages
+class PlagiarismChecker:
+    def __init__(self, master):
+        self.master = master
+        master.title("Plagiarism Checker")
 
-    # Ikkinchi PDF faylni ochamiz
-    with open(pdf2, 'rb') as file2:
-        pdf_reader2 = PyPDF2.PdfFileReader(file2)
-        page_count2 = pdf_reader2.numPages
+        self.file1_path = None
+        self.file2_path = None
 
-    # Foizni hisoblaymiz
-    if page_count1 > 0 and page_count2 > 0:
-        foiz = (min(page_count1, page_count2) / max(page_count1, page_count2)) * 100
-        return foiz
-    else:
-        return 0
+        self.browse_button1 = tk.Button(master, text="Asosiy faylni tanlang", command=self.browse_pdf_file1)
+        self.browse_button1.pack(pady=10)
 
-def fayl_tanlash():
-    # Fayl menejer oynasini ochamiz
-    root = tk.Tk()
-    root.withdraw()
+        self.browse_button2 = tk.Button(master, text="Tekshiriladigon fayl!", command=self.browse_pdf_file2)
+        self.browse_button2.pack(pady=10)
 
-    # Birinchi PDF faylni tanlash
-    file_path1 = filedialog.askopenfilename(title="Birinchi PDF faylni tanlang", filetypes=[("PDF fayllari", "*.pdf")])
+        self.check_button = tk.Button(master, text="O'xshashlikni tekshirish", command=self.check_plagiarism)
+        self.check_button.pack(pady=20)
 
-    # Ikkinchi PDF faylni tanlash
-    file_path2 = filedialog.askopenfilename(title="Ikkinchi PDF faylni tanlang", filetypes=[("PDF fayllari", "*.pdf")])
+        self.result_label = tk.Label(master, text="")
+        self.result_label.pack(pady=20)
 
-    # Foizni hisoblash va natijani korsatish
-    if file_path1 and file_path2:
-        foiz = hisobla_foiz(file_path1, file_path2)
+    def extract_text(self, file_path):
+        text = ""
+        with open(file_path, "rb") as file:
+            pdf_reader = PdfFileReader(file)
+            for page_num in range(pdf_reader.numPages):
+                page = pdf_reader.getPage(page_num)
+                text += page.extract_text()
+        return text
 
-        # Yangi oyna yaratish
-        result_window = tk.Tk()
-        result_window.title("Natija")
+    def calculate_plagiarism_percentage(self, text1, text2):
+        words1 = re.findall(r'\b\w+\b', text1.lower())
+        words2 = re.findall(r'\b\w+\b', text2.lower())
+        p = 0
+        for t1 in words1:
+            for t2 in words2:
+                if t1 == t2:
+                    p = p + 1
+        # common_words = set(words1) & set(words2)
+        # plagiarism_percentage = (len(common_words) / len(set(words1))) * 100
+        # plagiarism_percentage = (p / (len(words1) + len(words2) - p * 2)) * 100
+        plagiarism_percentage = (p / (len(words1))) * 100
 
-        # Natijani korsatish
-        result_label = tk.Label(result_window, text=f"Foiz: {foiz}%", font=("Helvetica", 12))
-        result_label.pack(pady=20)
+        return plagiarism_percentage
 
-        # Oynani ishga tushirish
-        result_window.mainloop()
+    def browse_pdf_file1(self):
+        self.file1_path = filedialog.askopenfilename(
+            title="Select PDF File 1",
+            filetypes=[("PDF files", "*.pdf")]
+        )
+
+    def browse_pdf_file2(self):
+        self.file2_path = filedialog.askopenfilename(
+            title="Select PDF File 2",
+            filetypes=[("PDF files", "*.pdf")]
+        )
+
+    def check_plagiarism(self):
+        if self.file1_path and self.file2_path:
+            text1 = self.extract_text(self.file1_path)
+            text2 = self.extract_text(self.file2_path)
+
+            plagiarism_percentage = self.calculate_plagiarism_percentage(text1, text2)
+            self.result_label.config(text=f"O'xshashlik: {plagiarism_percentage:.2f}%")
+        else:
+            self.result_label.config(text="Iltimos barcha maydonlarni to'ldiring, 2 ta pdf fayl tanlaganingizga ishonch hosil qiling !")
 
 if __name__ == "__main__":
-    fayl_tanlash()
+    root = tk.Tk()
+    plagiarism_checker = PlagiarismChecker(root)
+    root.mainloop()
